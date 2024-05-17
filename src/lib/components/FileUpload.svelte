@@ -6,6 +6,7 @@
   let downloadUrl = writable(null);
   let downloadType = writable(null);
   let selectedOption = writable('face'); // 선택된 옵션을 저장할 writable 스토어
+  let processing = writable(false); // 파일 업로드 처리 상태
 
   function preventDefaults(e) {
     console.log('preventDefaults called'); // 디버깅 로그
@@ -62,6 +63,7 @@
 
   async function startMosaicing() {
     console.log('startMosaicing function called'); // 디버깅 로그
+    processing.set(true); // 처리 상태 설정
     
     const formData = new FormData();
     let currentFiles;
@@ -107,8 +109,13 @@
       } else if (blob.type.startsWith('image/')) {
         downloadType.set('image');
       }
+
+      // 업로드 성공 시 파일 목록 초기화
+      files.set([]);
     } catch (error) {
       console.error('There was a problem with the fetch operation:', error);
+    } finally {
+      processing.set(false); // 처리 상태 해제
     }
   }
 </script>
@@ -186,5 +193,9 @@
       class="mt-4 bg-green-500 text-white py-2 px-6 rounded shadow-lg hover:bg-green-700 transition-colors block text-center">
       Download {$downloadType === 'zip' ? 'ZIP File' : 'Image'}
     </a>
+  {:else if $processing}
+    <div class="mt-4 bg-yellow-500 text-white py-2 px-6 rounded shadow-lg text-center">
+      Processing...
+    </div>
   {/if}
 </section>
