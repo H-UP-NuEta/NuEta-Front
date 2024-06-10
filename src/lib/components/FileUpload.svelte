@@ -55,7 +55,7 @@
     });
 
     try {
-      const response = await fetch('http://34.22.109.229:8000/face/images/upload', {
+      const response = await fetch('http://34.64.232.74:8000/face/images/upload', {
         method: 'POST',
         body: formData
       });
