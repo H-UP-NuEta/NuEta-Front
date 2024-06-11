@@ -81,9 +81,9 @@
 
     let url;
     if (selectedOptionValue === 'face') {
-      url = 'http://34.22.109.229:8000/face/images/upload';
+      url = 'https://www.nu-eta.shop/face/images/upload';
     } else if (selectedOptionValue === 'car_plate') {
-      url = 'http://34.22.109.229:8000/car_plate/images/upload';
+      url = 'https://www.nu-eta.shop/car_plate/images/upload';
     }
 
     console.log('POST URL:', url);
