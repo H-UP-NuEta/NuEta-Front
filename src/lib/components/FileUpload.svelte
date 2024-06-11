@@ -89,7 +89,7 @@
     console.log('POST URL:', url);
 
     try {
-      const response = await fetch('http://34.64.232.74:8000/face/images/upload', {
+      const response = await fetch('https://www.nu-eta.shop/face/images/upload', {
         method: 'POST',
         body: formData
       });
