@@ -2,34 +2,32 @@
   import { writable } from 'svelte/store';
 
   const MAX_FILES = 10;
+  const MAX_FILE_SIZE_MB = 10;  // Set the max file size limit (in MB)
+  const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
   let files = writable([]);
   let downloadUrl = writable(null);
   let downloadType = writable(null);
-  let selectedOption = writable('face'); // 선택된 옵션을 저장할 writable 스토어
-  let processing = writable(false); // 파일 업로드 처리 상태
+  let selectedOption = writable('face');
+  let processing = writable(false);
 
   function preventDefaults(e) {
-    console.log('preventDefaults called'); // 디버깅 로그
     e.preventDefault();
     e.stopPropagation();
   }
 
   function highlight(e) {
-    console.log('highlight called'); // 디버깅 로그
     e.currentTarget.classList.add('bg-gray-100');
   }
 
   function unhighlight(e) {
-    console.log('unhighlight called'); // 디버깅 로그
     e.currentTarget.classList.remove('bg-gray-100');
   }
 
   function handleFiles(selectedFiles) {
-    console.log('handleFiles called', selectedFiles); // 디버깅 로그
     files.update(currentFiles => {
       let newFiles = [...currentFiles];
       selectedFiles.forEach(file => {
-        if (newFiles.length < MAX_FILES && (file.type.startsWith('image/') || file.type.startsWith('video/'))) {
+        if (newFiles.length < MAX_FILES && (file.type.startsWith('image/') || file.type.startsWith('video/')) && file.size <= MAX_FILE_SIZE_BYTES) {
           newFiles.push(file);
         }
       });
@@ -38,18 +36,14 @@
   }
 
   function handleDrop(e) {
-    console.log('handleDrop called'); // 디버깅 로그
     unhighlight(e);
     let dt = e.dataTransfer;
     let droppedFiles = Array.from(dt.files);
-
     handleFiles(droppedFiles);
   }
 
   function handleChange(e) {
-    console.log('handleChange called'); // 디버깅 로그
     let selectedFiles = Array.from(e.target.files);
-
     handleFiles(selectedFiles);
   }
 
@@ -62,60 +56,31 @@
   }
 
   async function startMosaicing() {
-    console.log('startMosaicing function called'); // 디버깅 로그
-    processing.set(true); // 처리 상태 설정
-    
+    processing.set(true);
     const formData = new FormData();
     let currentFiles;
-
     files.subscribe(value => currentFiles = value)();
-    console.log('Files:', currentFiles);
-
-    currentFiles.forEach(file => {
-      formData.append('files', file);
-    });
-
+    currentFiles.forEach(file => formData.append('files', file));
     let selectedOptionValue;
     selectedOption.subscribe(value => selectedOptionValue = value)();
-    console.log('Selected option:', selectedOptionValue);
 
-    let url;
-    if (selectedOptionValue === 'face') {
-      url = 'https://www.nu-eta.shop/face/images/upload';
-    } else if (selectedOptionValue === 'car_plate') {
-      url = 'https://www.nu-eta.shop/car_plate/images/upload';
-    }
-
-    console.log('POST URL:', url);
+    let url = selectedOptionValue === 'face'
+      ? 'https://www.nu-eta.shop/face/images/upload'
+      : 'https://www.nu-eta.shop/car_plate/images/upload';
 
     try {
-      const response = await fetch(url, {
-        method: 'POST',
-        body: formData
-      });
-
-      console.log('Fetch response:', response);
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
+      const response = await fetch(url, { method: 'POST', body: formData });
+      if (!response.ok) throw new Error('Network response was not ok');
 
       const blob = await response.blob();
       const downloadLink = URL.createObjectURL(blob);
       downloadUrl.set(downloadLink);
-
-      if (blob.type === 'application/zip') {
-        downloadType.set('zip');
-      } else if (blob.type.startsWith('image/')) {
-        downloadType.set('image');
-      }
-
-      // 업로드 성공 시 파일 목록 초기화
+      downloadType.set(blob.type === 'application/zip' ? 'zip' : 'image');
       files.set([]);
     } catch (error) {
-      console.error('There was a problem with the fetch operation:', error);
+      console.error('Fetch operation error:', error);
     } finally {
-      processing.set(false); // 처리 상태 해제
+      processing.set(false);
     }
   }
 </script>
@@ -146,7 +111,6 @@
       </div>
     {/if}
 
-    <!-- 라디오 버튼 추가 -->
     <div class="my-4">
       <label class="block text-sm font-medium text-gray-700">Select Upload Option</label>
       <div class="mt-2 space-y-2">
